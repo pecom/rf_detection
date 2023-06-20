@@ -4,9 +4,16 @@ library(rpart.plot)
 library(gmodels)
 library(randomForest)
 library(ggplot2)
+library(tibble)
 
+# Params for the run
+full.data = FALSE
+include.radius = TRUE
+messy.data = FALSE
+opt.bands = TRUE
 
-colorify = function(df){
+# Functions to change magnitudes to colors
+colorify.full = function(df){
     uB = df$u - df$B
     BV = df$B - df$V
     Vr = df$V - df$r
@@ -21,30 +28,66 @@ colorify = function(df){
     df_new
 }
 
-full_data = FALSE
-
-df_blend = read.csv('./data/rf_data/blend_phot.csv')
-if (full_data) {
-    df_noblend = read.csv('./data/rf_data/noblend_phot.csv')
-} else {
-    df_noblend = read.csv('./data/rf_data/noblend_sub_phot.csv')
+colorify.optical = function(df){
+    uB = df$u - df$B
+    BV = df$B - df$V
+    Vr = df$V - df$r
+    ri = df$r - df$ip
+    iz = df$i - df$zpp
+    blend = df$blend
+    df_new = data.frame(uB, BV, Vr, ri, iz, df$i,df$blend)
+    names(df_new)[6:7] = c("i","blend")
+    df_new
 }
+###############################################
+# Load Data                                   #
+###############################################
+if (messy.data) {
+    df_blend = read.csv('./data/rf_data/blend_phot_messy.csv')
+    df_noblend = read.csv('./data/rf_data/noblend_phot_messy.csv')
+    df_vali = read.csv('./data/rf_data/vali_phot_messy.csv')
+} else {
+    df_blend = read.csv('./data/rf_data/blend_phot.csv')
+    df_noblend = read.csv('./data/rf_data/noblend_phot.csv')
+    df_vali = read.csv('./data/rf_data/vali_phot.csv')
+}
+
+if (!full.data) {
+    df_noblend = dplyr::sample_n(df_noblend, nrow(df_blend))
+}
+
 df = rbind(df_blend, df_noblend)
 
-df_vali = read.csv('./data/rf_data/vali_phot.csv')
+###############################################
+# Massage into final form.                    #
+# Change into colors and include flux_radius  #
+###############################################
+if (opt.bands) {
+    df.color = colorify.optical(df)
+    vali.color = colorify.optical(df_vali)
+} else {
+    df.color = colorify.full(df)
+    vali.color = colorify.full(df_vali)
+}
 
-df.color = colorify(df)
-vali.color = colorify(df_vali)
+if (include.radius) {
+    df.color = add_column(df.color, FLUX_RADIUS = df$FLUX_RADIUS, .after = "i")
+    vali.color = add_column(vali.color, FLUX_RADIUS=df_vali$FLUX_RADIUS, .after="i")
+}
 
-phot.train = df.color[, 1:9]
-phot.test = vali.color[, 1:9]
+df.nparams = ncol(df.color) - 1
 
-blend.train = df.color[, 10]
-blend.test = vali.color[, 10]
+phot.train = df.color[, 1:df.nparams]
+phot.test = vali.color[, 1:df.nparams]
 
+blend.train = df.color[, df.nparams+1]
+blend.test = vali.color[, df.nparams+1]
 train_factors = factor(blend.train)
 
-
+###############################################
+# Functions to create decision trees,         #
+# random forests, and final plots.            #
+###############################################
 conf.factors = function(bpred, btrue) {
     # confusion_matrix(obs=btest, pred=bpred, plot=TRUE,
     #              colors = c(low="#eff3ff" , high="#08519c"), unit = "count")
@@ -89,9 +132,10 @@ score.throw = function(pred, truth) {
     }
 }
 
-cutoff = .6
+###############################################
+# Run random forest!                          #
+###############################################
 ntree = 500
-
 rcont = rf.cont(phot.test, ntree)
 blend.predict = rcont$predict
 
@@ -115,8 +159,5 @@ for (i in seq_along(cutoffs)) {
 }
 
 money.plot = do.call(rbind, Map(data.frame, blend=blendpercs, sample=samplepercs))
-if (full_data) {
-    save(money.plot, file = "./output/full_split_rf.Rda") 
-} else {
-    save(money.plot, file = "./output/even_split_rf.Rda") 
-}
+fname = sprintf("./output/rf_split%s_radius%s_messy%s_opt%s.Rda", even.split, include.radius, messy.data, opt.bands)
+save(money.plot, file = fname) 
