@@ -52,7 +52,7 @@ if (messy.data) {
     df_vali = read.csv('./data/rf_data/vali_phot.csv')
 }
 
-if (!even.split) {
+if (even.split) {
     df_noblend = dplyr::sample_n(df_noblend, nrow(df_blend))
 }
 
