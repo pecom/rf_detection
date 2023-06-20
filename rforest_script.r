@@ -160,4 +160,8 @@ for (i in seq_along(cutoffs)) {
 
 money.plot = do.call(rbind, Map(data.frame, blend=blendpercs, sample=samplepercs))
 fname = sprintf("./output/rf_split%s_radius%s_messy%s_opt%s.Rda", even.split, include.radius, messy.data, opt.bands)
-save(money.plot, file = fname) 
+save(money.plot, file = fname)
+
+tplot = ggplot(data=full.split, aes(x=sample, y=blend)) + geom_point(color='red', shape=1, size=3)
+figname = sprintf("./figs/rf_split%s_radius%s_messy%s_opt%s.png", even.split, include.radius, messy.data, opt.bands)
+ggsave(figname, plot=tplot)
