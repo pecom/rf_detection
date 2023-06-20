@@ -126,6 +126,7 @@ rf.class = function(p.test, nt=500) {
 score.throw = function(pred, truth) {
     if (sum(pred) == 0) {
         print("Only predicting 0s... there's an issue")
+        newList <- list("blend"=0.0, "total"=0.0)
     } else {
         t2 = confusion_matrix(obs=truth, pred=pred)
         newList <- list("blend" = t2[2,2]/(sum(t2[,2])), "total" = sum(t2[2,])/sum(t2))
@@ -148,6 +149,7 @@ cutoffs = seq(0.01, .99, .01)
 # datalist = vector("list", length = length(cutoffs))
 blendpercs = list()
 samplepercs = list()
+cutvals = list()
 
 for (i in seq_along(cutoffs)) {
     pred.labels = as.integer(blend.predict > cutoffs[i])
@@ -156,9 +158,10 @@ for (i in seq_along(cutoffs)) {
     # datalist[[i]] <- dat # add it to your list
     blendpercs[[i]] <- dat$blend
     samplepercs[[i]] <- dat$total
+    cutvals[[i]] <- i
 }
 
-money.plot = do.call(rbind, Map(data.frame, blend=blendpercs, sample=samplepercs))
+money.plot = do.call(rbind, Map(data.frame, blend=blendpercs, sample=samplepercs, cut=cutvals))
 fname = sprintf("./output/rf_split%s_radius%s_messy%s_opt%s.Rda", even.split, include.radius, messy.data, opt.bands)
 save(money.plot, file = fname)
 
