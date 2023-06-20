@@ -7,7 +7,7 @@ library(ggplot2)
 library(tibble)
 
 # Params for the run
-full.data = FALSE
+even.split = FALSE
 include.radius = TRUE
 messy.data = FALSE
 opt.bands = TRUE
@@ -52,7 +52,7 @@ if (messy.data) {
     df_vali = read.csv('./data/rf_data/vali_phot.csv')
 }
 
-if (!full.data) {
+if (!even.split) {
     df_noblend = dplyr::sample_n(df_noblend, nrow(df_blend))
 }
 
@@ -162,6 +162,6 @@ money.plot = do.call(rbind, Map(data.frame, blend=blendpercs, sample=samplepercs
 fname = sprintf("./output/rf_split%s_radius%s_messy%s_opt%s.Rda", even.split, include.radius, messy.data, opt.bands)
 save(money.plot, file = fname)
 
-tplot = ggplot(data=full.split, aes(x=sample, y=blend)) + geom_point(color='red', shape=1, size=3)
+tplot = ggplot(data=money.plot, aes(x=sample, y=blend)) + geom_point(color='red', shape=1, size=3)
 figname = sprintf("./figs/rf_split%s_radius%s_messy%s_opt%s.png", even.split, include.radius, messy.data, opt.bands)
 ggsave(figname, plot=tplot)
