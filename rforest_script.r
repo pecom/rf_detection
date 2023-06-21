@@ -11,6 +11,7 @@ even.split = FALSE
 include.radius = TRUE
 messy.data = FALSE
 opt.bands = TRUE
+blend.weak = TRUE
 
 # Functions to change magnitudes to colors
 colorify.full = function(df){
@@ -112,7 +113,7 @@ dtree.cont = function(p.test, makeplot=TRUE) {
     newList <- list("method" = out.rpart, "predict" = blend.pred)
 }
 rf.cont = function(p.test, nt=500) {
-    out.rf = randomForest(x=phot.train,y=blend.train,importance=FALSE, ntree=nt)
+    out.rf = randomForest(x=phot.train,y=blend.train,importance=TRUE, ntree=nt)
     blend.pred = predict(out.rf,newdata=p.test)
     attr(blend.pred, "names") <- NULL
     newList <- list("method" = out.rf, "predict" = blend.pred)
@@ -162,9 +163,12 @@ for (i in seq_along(cutoffs)) {
 }
 
 money.plot = do.call(rbind, Map(data.frame, blend=blendpercs, sample=samplepercs, cut=cutvals))
-fname = sprintf("./output/rf_split%s_radius%s_messy%s_opt%s.Rda", even.split, include.radius, messy.data, opt.bands)
+fname = sprintf("./output/rf_split%s_radius%s_messy%s_opt%s_weak%s.Rda", even.split, include.radius, messy.data, opt.bands, blend.weak)
 save(money.plot, file = fname)
 
 tplot = ggplot(data=money.plot, aes(x=sample, y=blend)) + geom_point(color='red', shape=1, size=3)
-figname = sprintf("./figs/rf_split%s_radius%s_messy%s_opt%s.png", even.split, include.radius, messy.data, opt.bands)
+figname = sprintf("./figs/rf_split%s_radius%s_messy%s_opt%s_weak%s.png", even.split, include.radius, messy.data, opt.bands, blend.weak)
 ggsave(figname, plot=tplot)
+
+rfname = sprintf("./output/rfobj_split%s_radius%s_messy%s_opt%s_weak%s.Rda", even.split, include.radius, messy.data, opt.bands, blend.weak)
+save(rcont, rfname)
