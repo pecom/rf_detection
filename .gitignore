@@ -1,6 +1,9 @@
 data/*
 output/*
 
+# Notebook files
+*.ipynb
+
 
 # History files
 .Rhistory
