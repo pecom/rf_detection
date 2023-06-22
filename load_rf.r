@@ -1,4 +1,3 @@
-# library(metrica)
 library(rpart)
 library(rpart.plot)
 library(gmodels)
@@ -7,13 +6,12 @@ library(ggplot2)
 library(tibble)
 library(cvms)
 
-
-# Params for the run
+# Params to load
 even.split = FALSE
 include.radius = TRUE
 messy.data = TRUE
 opt.bands = TRUE
-blend.weak = TRUE
+blend.weak = FALSE
 
 # Functions to change magnitudes to colors
 colorify.full = function(df){
@@ -100,36 +98,13 @@ conf.factors = function(bpred, btrue) {
     #              colors = c(low="#eff3ff" , high="#08519c"), unit = "count")
     CrossTable(bpred,btrue)
 }
-dtree.classify = function(p.test, makeplot=TRUE) {
-    out.rpart = rpart(blend.train~.,data=phot.train,
-                  minsplit = 1, minbucket = 1, method='class')
-    blend.pred = predict(out.rpart,newdata=p.test, type = "class")
-    if (makeplot){
-        rpart.plot(out.rpart)
-    }
-    newList <- list("method" = out.rpart, "predict" = blend.pred)
-}
-dtree.cont = function(p.test, makeplot=TRUE) {
-    out.rpart = rpart(blend.train~.,data=phot.train, minsplit = 1, minbucket = 1, method='anova')
-    if (makeplot){
-        rpart.plot(out.rpart)
-    }
-    blend.pred = predict(out.rpart,newdata=p.test)
+
+new.pred = function(rf.obj, p.test) {
+    blend.pred = predict(rf.obj,newdata=p.test)
     attr(blend.pred, "names") <- NULL
-    newList <- list("method" = out.rpart, "predict" = blend.pred)
+    newList <- list("predict" = blend.pred)
 }
-rf.cont = function(p.test, nt=500) {
-    out.rf = randomForest(x=phot.train,y=blend.train,importance=TRUE, ntree=nt)
-    blend.pred = predict(out.rf,newdata=p.test)
-    attr(blend.pred, "names") <- NULL
-    newList <- list("method" = out.rf, "predict" = blend.pred)
-}
-rf.class = function(p.test, nt=500) {
-    out.rf = randomForest(x=phot.train,y=train_factors,importance=TRUE, ntree=10)
-    blend.pred = predict(out.rf,newdata=p.test)
-    attr(blend.pred, "names") <- NULL
-    newList <- list("method" = out.rf, "predict" = blend.pred)
-}
+
 score.throw = function(pred, truth) {
     if (sum(pred) == 0) {
         print("Only predicting 0s... there's an issue")
@@ -142,41 +117,24 @@ score.throw = function(pred, truth) {
     }
 }
 
-###############################################
-# Run random forest!                          #
-###############################################
-ntree = 500
-rcont = rf.cont(phot.test, ntree)
-blend.predict = rcont$predict
+new.moneyplot = function(pred, truth) {
+	cutoffs = seq(0.01, .99, .01)
+	blendpercs = list()
+	samplepercs = list()
+	cutvals = list()
 
-pred.labels = as.integer(blend.predict > .9)
-kale = score.throw(pred.labels, blend.test)
-cat("Throwing away", kale$total, "% of sample gets", kale$blend, "% of the blends")
-
-
-cutoffs = seq(0.01, .99, .01)
-# datalist = vector("list", length = length(cutoffs))
-blendpercs = list()
-samplepercs = list()
-cutvals = list()
-
-for (i in seq_along(cutoffs)) {
-    pred.labels = as.integer(blend.predict > cutoffs[i])
-    dat = score.throw(pred.labels, blend.test)
-    # dat$i <- i  # maybe you want to keep track of which iteration produced it?
-    # datalist[[i]] <- dat # add it to your list
-    blendpercs[[i]] <- dat$blend
-    samplepercs[[i]] <- dat$total
-    cutvals[[i]] <- i
+	for (i in seq_along(cutoffs)) {
+	    pred.labels = as.integer(pred > cutoffs[i])
+	    dat = score.throw(pred.labels, truth)
+	    # dat$i <- i  # maybe you want to keep track of which iteration produced it?
+	    # datalist[[i]] <- dat # add it to your list
+	    blendpercs[[i]] <- dat$blend
+	    samplepercs[[i]] <- dat$total
+	    cutvals[[i]] <- i
+	}
+	money.plot = do.call(rbind, Map(data.frame, blend=blendpercs, sample=samplepercs, cut=cutvals))
+	money.plot
 }
 
-money.plot = do.call(rbind, Map(data.frame, blend=blendpercs, sample=samplepercs, cut=cutvals))
 fname = sprintf("./output/rf_split%s_radius%s_messy%s_opt%s_weak%s.Rda", even.split, include.radius, messy.data, opt.bands, blend.weak)
-save(money.plot, file = fname)
-
-tplot = ggplot(data=money.plot, aes(x=sample, y=blend)) + geom_point(color='red', shape=1, size=3)
-figname = sprintf("./figs/rf_split%s_radius%s_messy%s_opt%s_weak%s.png", even.split, include.radius, messy.data, opt.bands, blend.weak)
-ggsave(figname, plot=tplot)
-
 rfname = sprintf("./output/rfobj_split%s_radius%s_messy%s_opt%s.Rda", even.split, include.radius, messy.data, opt.bands)
-save(rcont, file=rfname)
