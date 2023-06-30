@@ -1,8 +1,10 @@
 data/*
 output/*
 
-# Notebook files
+# Perlmutter files
 *.ipynb
+.ipynb_checkpoints/*
+*.slurm
 
 
 # History files
