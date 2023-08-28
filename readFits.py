@@ -44,7 +44,8 @@ if __name__ == "__main__":
     out_dir = f'{pscratch}/output/run{args.n}'
 
     training_pure = process_rf_fits('train_pure', tag=0, star_cut=1, data_dir=data_dir)
-    training_blend = process_rf_fits('iden_weak_unrec', tag=1, star_cut=1, data_dir=data_dir)
+    training_blend = process_rf_fits('iden_weak_unrec', tag=1, star_cut=1, data_dir=data_dir)  
+    training_strong = process_rf_fits('iden_strong_unrec', tag=1, star_cut=1, data_dir = data_dir)
     vali_weak = process_rf_vali('vali_weak', 'b2', star_cut=1, data_dir=data_dir)
     vali_strong = process_rf_vali('vali_strong', 'b1', star_cut=1, data_dir=data_dir)
 
@@ -53,5 +54,8 @@ if __name__ == "__main__":
     
     np.savetxt(f'{out_dir}/training_pure_messy.csv', training_pure, delimiter=',', header=csv_headstr, comments='')
     np.savetxt(f'{out_dir}/training_blend_messy.csv', training_blend, delimiter=',', header=csv_headstr, comments='')
+    np.savetxt(f'{out_dir}/training_strong_messy.csv', training_strong, delimiter=',', header=csv_headstr, comments='')
     np.savetxt(f'{out_dir}/vali_weak_messy.csv', vali_weak, delimiter=',', header=csv_headstr, comments='')
     np.savetxt(f'{out_dir}/vali_strong_messy.csv', vali_strong, delimiter=',', header=csv_headstr, comments='')
+
+    

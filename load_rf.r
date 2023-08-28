@@ -38,8 +38,8 @@ colorify.optical = function(df){
     ri = df$r - df$ip
     iz = df$i - df$zpp
     blend = df$blend
-    df_new = data.frame(uB, BV, Vr, ri, iz, df$i,df$blend)
-    names(df_new)[6:7] = c("i","blend")
+    df_new = data.frame(uB, BV, Vr, ri, iz, df$i, df$FLUX_RADIUS, df$blend)
+    names(df_new)[6:8] = c("i", "FLUX_RADIUS", "blend")
     df_new
 }
 
@@ -79,10 +79,10 @@ if (load.data){
         vali.color = colorify.full(df_vali)
     }
 
-    if (include.radius) {
-        df.color = add_column(df.color, FLUX_RADIUS = df$FLUX_RADIUS, .after = "i")
-        vali.color = add_column(vali.color, FLUX_RADIUS=df_vali$FLUX_RADIUS, .after="i")
-    }
+    # if (include.radius) {
+    #     df.color = add_column(df.color, FLUX_RADIUS = df$FLUX_RADIUS, .after = "i")
+    #     vali.color = add_column(vali.color, FLUX_RADIUS=df_vali$FLUX_RADIUS, .after="i")
+    # }
 
     df.nparams = ncol(df.color) - 1
 

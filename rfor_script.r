@@ -18,8 +18,12 @@ colorify.optical = function(df){
     ri = df$r - df$ip
     iz = df$i - df$zpp
     blend = df$blend
-    df_new = data.frame(uB, BV, Vr, ri, iz, df$i, df$FLUX_RADIUS, df$blend)
-    names(df_new)[6:8] = c("i", "FLUX_RADIUS", "blend")
+
+    df_new = data.frame(uB, BV, Vr, ri, iz, df$i, df$blend)
+    names(df_new)[6:7] = c("i", "blend")
+
+#    df_new = data.frame(uB, BV, Vr, ri, iz, df$i, df$FLUX_RADIUS, df$blend)
+#    names(df_new)[6:8] = c("i", "FLUX_RADIUS", "blend")
     df_new
 }
 ###############################################
@@ -110,10 +114,10 @@ strong.predict = new.pred(rcont$method, strong.phot)
 weak.money = new.moneyplot(weak.predict$predict, weak.test)
 strong.money = new.moneyplot(strong.predict$predict, strong.test)
 
-save(weak.predict, file=paste(outdir, '/weak_predict.Rda', sep=''))
-save(strong.predict, file=paste(outdir, '/strong_predict.Rda', sep=''))
+save(weak.predict, file=paste(outdir, '/weak_predict_norad.Rda', sep=''))
+save(strong.predict, file=paste(outdir, '/strong_predict_norad.Rda', sep=''))
 
-save(weak.money, file=paste(outdir, '/weak_mony.Rda', sep=''))
-save(strong.money, file=paste(outdir, '/strong_mony.Rda', sep=''))
+save(weak.money, file=paste(outdir, '/weak_mony_norad.Rda', sep=''))
+save(strong.money, file=paste(outdir, '/strong_mony_norad.Rda', sep=''))
 
-save(rcont, file=paste(outdir,"/rfobj.Rda", sep=''))
+save(rcont, file=paste(outdir,"/rfobj_norad.Rda", sep=''))
