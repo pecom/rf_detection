@@ -43,6 +43,18 @@ colorify.optical = function(df){
     df_new
 }
 
+colorify.optical.norad = function(df){
+    uB = df$u - df$B
+    BV = df$B - df$V
+    Vr = df$V - df$r
+    ri = df$r - df$ip
+    iz = df$i - df$zpp
+    blend = df$blend
+    df_new = data.frame(uB, BV, Vr, ri, iz, df$i, df$blend)
+    names(df_new)[6:7] = c("i", "blend")
+    df_new
+}
+
 if (load.data){
     ###############################################
     # Load Data                                   #
