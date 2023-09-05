@@ -10,6 +10,9 @@ library(cvms)
 PSCRATCH = Sys.getenv("PSCRATCH")   
 args = commandArgs(trailingOnly=TRUE)
 outdir = paste(PSCRATCH, '/output/run', args[1], sep='')
+# outdir = paste(PSCRATCH, '/output/run', 1, sep='')
+
+suffix='_norad_noi_BV_vr.Rda'
 
 colorify.optical = function(df){
     uB = df$u - df$B
@@ -19,8 +22,14 @@ colorify.optical = function(df){
     iz = df$i - df$zpp
     blend = df$blend
 
-    df_new = data.frame(uB, BV, Vr, ri, iz, df$i, df$blend)
-    names(df_new)[6:7] = c("i", "blend")
+#    df_new = data.frame(uB, BV, Vr, ri, iz, df$i, df$blend)
+#    names(df_new)[6:7] = c("i", "blend")
+ 
+    df_new = data.frame(uB, BV, Vr, ri, iz, df$blend)
+    names(df_new)[6] = c("blend")
+    
+    # df_new = data.frame(BV, Vr, df$blend)
+    # names(df_new)[3] = c("blend")
 
 #    df_new = data.frame(uB, BV, Vr, ri, iz, df$i, df$FLUX_RADIUS, df$blend)
 #    names(df_new)[6:8] = c("i", "FLUX_RADIUS", "blend")
@@ -61,7 +70,7 @@ strong.test = strong.color[, df.nparams + 1]
 # forest.                                     #
 ###############################################
 rf.cont = function(nt=500) {
-    out.rf = randomForest(x=phot.train,y=blend.train,importance=TRUE, ntree=nt)
+    out.rf = randomForest(x=phot.train,y=blend.train,importance=TRUE, ntree=nt, keep.forest=TRUE)
     newList <- list("method" = out.rf)
 }
 
@@ -114,10 +123,10 @@ strong.predict = new.pred(rcont$method, strong.phot)
 weak.money = new.moneyplot(weak.predict$predict, weak.test)
 strong.money = new.moneyplot(strong.predict$predict, strong.test)
 
-save(weak.predict, file=paste(outdir, '/weak_predict_norad.Rda', sep=''))
-save(strong.predict, file=paste(outdir, '/strong_predict_norad.Rda', sep=''))
+save(weak.predict, file=paste(outdir, '/weak_predict', suffix, sep=''))
+save(strong.predict, file=paste(outdir, '/strong_predict', suffix, sep=''))
 
-save(weak.money, file=paste(outdir, '/weak_mony_norad.Rda', sep=''))
-save(strong.money, file=paste(outdir, '/strong_mony_norad.Rda', sep=''))
+save(weak.money, file=paste(outdir, '/weak_mony', suffix, sep=''))
+save(strong.money, file=paste(outdir, '/strong_mony', suffix, sep=''))
 
-save(rcont, file=paste(outdir,"/rfobj_norad.Rda", sep=''))
+save(rcont, file=paste(outdir,"/rfobj", suffix, sep=''))
