@@ -9,9 +9,9 @@ library(cvms)
 
 pdir = Sys.getenv("PSCRATCH")   
 hdir = Sys.getenv("HOME")
-outdir = paste(pdir, '/output/new_run', sep='')
-indir = paste(pdir, '/data/new_run', sep='')
-suffix='inbag.Rda'
+outdir = paste(pdir, '/output/subset', sep='')
+indir = paste(pdir, '/data/subset', sep='')
+suffix='_3class_1_1_1.Rda'
 
 
 ###############################################
@@ -76,29 +76,18 @@ new.moneyplot = function(pred, truth) {
 # Load and format data                        #
 ###############################################
 
-df_noblend = read.csv(paste(pdir, '/data/new_run/pure_table_err.csv', sep=''))
-df_weak = read.csv(paste(pdir, '/data/new_run/weak_table_err.csv', sep=''))
-df_strong = read.csv(paste(pdir, '/data/new_run/strong_table_err.csv', sep=''))
 
-df.pure = colorify.full(df_noblend)
-df.pure$type = 'pure'
-df.weak = colorify.full(df_weak)
-df.weak$type = 'weak'
-df.strong = colorify.full(df_strong)
-df.strong$type = 'strong'
-df.strong$blend = 1
+df.master = read.csv(paste(pdir, '/data/subset/subset_table.csv', sep=''))
 
-df.master = rbind(df.pure, df.weak, df.strong)
-
-phot.master = df.master[,1:10]
-label.master = df.master$blend
-type.master = df.master$type
+phot.master = df.master[,2:11]
+label.master = as.factor(df.master$blend)
+type.master = as.factor(df.master$type)
 
 ###############################################
 # Run random forest!                          #
 ###############################################
-ntree = 1000
-out.rf = randomForest(x=phot.master,y=label.master,importance=TRUE, ntree=ntree, keep.inbag=TRUE)
+ntree = 500
+out.rf = randomForest(x=phot.master,y=type.master,ntree=ntree, norm.votes=FALSE)
 rcont = list("method"=out.rf)
 
 save(rcont, file=paste(outdir,"/rfobj", suffix, sep=''))
