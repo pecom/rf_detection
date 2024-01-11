@@ -1,3 +1,6 @@
+# Create random forest that trains on strong blends and pure 
+# where pure=pure (no weak blends here!)
+
 # library(metrica)
 library(rpart)
 library(rpart.plot)
@@ -12,10 +15,10 @@ args = commandArgs(trailingOnly=TRUE)
 
 pdir = Sys.getenv("PSCRATCH")   
 hdir = Sys.getenv("HOME")
-outdir = paste(pdir, '/output/subset', sep='')
-indir = paste(pdir, '/data/subset', sep='')
-# suffix=paste('_truestrata_all_', args[1], '.Rda')
-suffix=paste('_truestrata_nofrad_i_iz_yj_zy_bv_jh_ri_ub.Rda')
+outdir = paste(pdir, '/output/run', args[1], sep='')
+indir = paste(pdir, '/data/run', args[1], sep='')
+# suffix=paste('_truestrata_all_fixedbig_i.Rda')
+suffix=paste('_somcomp_strong_noweak', args[1], '.Rda', sep='')
 
 
 ###############################################
@@ -42,24 +45,22 @@ colorify.full = function(df){
 ###############################################
 # Load and format data                        #
 ###############################################
-# df_noblend = read.csv(paste(pdir, "/data/new_run/pure_table_err.csv", sep = ""))
-# df_weak = read.csv(paste(pdir, "/data/new_run/weak_table_err.csv", sep = ""))
-# df_strong = read.csv(paste(pdir, "/data/new_run/strong_table_err.csv", sep = ""))
-# 
+# df_noblend = read.csv(paste(outdir, "/training_pure_messy.csv", sep = ""))
+# df_weak = read.csv(paste(outdir, "/training_strong_messy.csv", sep = ""))
+# # df_strong = read.csv(paste(outdir, "/strong_table_err.csv", sep = ""))
+
 # df.pure = colorify.full(df_noblend)
 # df.pure$type = "pure"
 # df.weak = colorify.full(df_weak)
-# df.weak$type = "weak"
-# df.strong = colorify.full(df_strong)
-# df.strong$type = "strong"
-# 
-# df.strong$blend = 1
-# df.master = rbind(df.pure, df.weak, df.strong)
+# df.weak$type = "strong"
 
-df.master = read.csv(paste(pdir, '/data/subset/subset_table.csv', sep=''))
+# df.master = rbind(df.pure, df.weak)
 
-phot.master = df.master[,2:11]
-phot.master = phot.master[,!names(phot.master) %in% c("FLUX_RADIUS", "i", "iz", "YJ", "zY", "BV", "JH", "ri", "uB")]
+df.master = read.csv(paste(outdir, '/iden_strong_noweak_rf.csv', sep=''))
+
+phot.master = df.master[,1:10]
+# phot.master = phot.master[,names(phot.master) %in% c("uB", "iz")]
+# phot.master = phot.master[,!names(phot.master) %in% c("FLUX_RADIUS", "i", "iz", "YJ", "zY", "BV", "JH", "ri", "uB")]
 label.master = as.factor(df.master$blend)
 type.master = as.factor(df.master$type)
 
