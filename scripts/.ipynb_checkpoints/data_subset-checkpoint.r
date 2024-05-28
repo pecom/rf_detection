@@ -34,16 +34,15 @@ load.alldata = function(){
     df.master
 }
 full.fat = load.alldata()
-temp.filt = as.logical((full.fat$FLUX_RADIUS <  4.45) * (full.fat$FLUX_RADIUS >  4.15))
-# temp.filt = as.logical((full.fat$i <  23.9) * (full.fat$i >  23.6))
-full.fat = full.fat[temp.filt,]
+flux.filt = as.logical((full.fat$FLUX_RADIUS <  4.305) * (full.fat$FLUX_RADIUS >  4.303))
+full.fat = full.fat[flux.filt,]
 
-nstrong = 500
-nweak = 500
-npure = 1000
+nstrong = 5
+nweak = 5
+npure = 10
 
 # suffix = paste(nstrong, nweak, npure, sep="_") 
-suffix = "flux_lim"
+suffix = "fluxrad_4-304"
 
 strong.subset = (full.fat[full.fat$type == 'strong', ])[sample(sum(full.fat$type == 'strong'), size=nstrong, replace=FALSE),]
 weak.subset = (full.fat[full.fat$type == 'weak', ])[sample(sum(full.fat$type == 'weak'), size=nweak, replace=FALSE),]

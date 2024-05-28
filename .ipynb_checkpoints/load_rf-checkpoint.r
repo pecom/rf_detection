@@ -21,12 +21,28 @@ colorify.full = function(df){
     BV = df$B - df$V
     Vr = df$V - df$r
     ri = df$r - df$ip
-    iz = df$i - df$zpp
+    iz = df$ip - df$zpp
+    zY = df$zpp - df$Y
+    YJ = df$Y - df$J
+    JH = df$J - df$H
+    i = df$ip
+    FLUX_RADIUS = df$FLUX_RADIUS
+    blend = df$blend
+    df_new = data.frame(uB, BV, Vr, ri, iz, zY, YJ, JH, i, FLUX_RADIUS, blend)
+    df_new
+}
+
+colorify.full.norad = function(df){
+    uB = df$u - df$B
+    BV = df$B - df$V
+    Vr = df$V - df$r
+    ri = df$r - df$ip
+    iz = df$ip - df$zpp
     zY = df$zpp - df$Y
     YJ = df$Y - df$J
     JH = df$J - df$H
     blend = df$blend
-    df_new = data.frame(uB, BV, Vr, ri, iz, zY, YJ, JH, df$i,df$blend)
+    df_new = data.frame(uB, BV, Vr, ri, iz, zY, YJ, JH, df$ip,df$blend)
     names(df_new)[9:10] = c("i","blend")
     df_new
 }
@@ -40,6 +56,18 @@ colorify.optical = function(df){
     blend = df$blend
     df_new = data.frame(uB, BV, Vr, ri, iz, df$i, df$FLUX_RADIUS, df$blend)
     names(df_new)[6:8] = c("i", "FLUX_RADIUS", "blend")
+    df_new
+}
+
+colorify.optical.norad = function(df){
+    uB = df$u - df$B
+    BV = df$B - df$V
+    Vr = df$V - df$r
+    ri = df$r - df$ip
+    iz = df$i - df$zpp
+    blend = df$blend
+    df_new = data.frame(uB, BV, Vr, ri, iz, df$i, df$blend)
+    names(df_new)[6:7] = c("i", "blend")
     df_new
 }
 
@@ -148,5 +176,60 @@ new.moneyplot = function(pred, truth) {
 	money.plot
 }
 
-fname = sprintf("./output/rf_split%s_radius%s_messy%s_opt%s_weak%s.Rda", even.split, include.radius, messy.data, opt.bands, blend.weak)
-rfname = sprintf("./output/rfobj_split%s_radius%s_messy%s_opt%s.Rda", even.split, include.radius, messy.data, opt.bands)
+log.moneyplot = function (pred, truth) {
+    log.power = seq(-5, 0, .05)
+    cutoffs = 10^log.power
+    blendpercs = list()
+    samplepercs = list()
+    cutvals = list()
+    for (i in seq_along(cutoffs)) {
+        pred.labels = as.integer(pred > cutoffs[i])
+        dat = score.throw(pred.labels, truth)
+        blendpercs[[i]] <- dat$blend
+        samplepercs[[i]] <- dat$total
+        cutvals[[i]] <- cutoffs[[i]]
+    }
+    money.plot = do.call(rbind, Map(data.frame, blend = blendpercs, 
+        sample = samplepercs, cut = cutvals))
+    money.plot
+}
+
+denom.lin.moneyplot = function(df, blend.filt, sname='score'){
+    cutoffs = seq(0.01, .99, .01)
+    blendpercs = list()
+    samplepercs = list()
+    precpercs = list()
+    remainblend = list()
+    cutvals = list()
+    
+    blend.denom = sum(blend.filt)
+    sample.denom = nrow(df)
+    
+    for (i in seq_along(cutoffs)) {
+        thrown.filt = df[[sname]] > cutoffs[i]
+        pred.labels = as.integer(thrown.filt)
+        blend.dat = sum(pred.labels[blend.filt])/blend.denom
+        sample.dat = sum(pred.labels)/sample.denom
+        prec.dat = sum(pred.labels[blend.filt])/sum(pred.labels)
+        
+        not.thrown = df[!thrown.filt,]
+        remainblend[[i]] = sum(not.thrown$blend)/sum(!thrown.filt)
+
+
+        blendpercs[[i]] <- blend.dat
+        samplepercs[[i]] <- sample.dat
+        precpercs[[i]] <- prec.dat
+        cutvals[[i]] <- i
+    }
+    money.plot = do.call(rbind, Map(data.frame, recall = blendpercs, cost = samplepercs,
+                                    precision=precpercs, cut = cutvals, remain=remainblend))
+    money.plot
+}
+
+rescale.column = function(x) {
+    newx = (x - min(x))/(max(x) - min(x))
+    newx
+}
+
+# fname = sprintf("./output/rf_split%s_radius%s_messy%s_opt%s_weak%s.Rda", even.split, include.radius, messy.data, opt.bands, blend.weak)
+# rfname = sprintf("./output/rfobj_split%s_radius%s_messy%s_opt%s.Rda", even.split, include.radius, messy.data, opt.bands)
